@@ -1,0 +1,10 @@
+[package]
+name = "cirious_codex_result"
+version = "0.1.0"
+authors = ["Cirious Studio <cirious.studio@proton.me>"]
+license = "MIT OR Apache-2.0"
+edition = "2021"
+description = "Robust result and error handling framework for the Cirious Codex ecosystem."
+repository = "https://github.com/Cirious-Studio/cirious_codex"
+
+[dependencies]

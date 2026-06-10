@@ -150,6 +150,46 @@ impl std::fmt::Display for CodexError {
 
 impl std::error::Error for CodexError {}
 
+impl From<std::io::Error> for CodexError {
+  fn from(err: std::io::Error) -> Self {
+    Self::builder("IO_ERROR", err.to_string()).with_meta("kind", format!("{:?}", err.kind()))
+  }
+}
+
+/// A trait for converting standard error types into `CodexError`.
+///
+/// This trait provides a bridge between external error types (such as `std::io::Error`)
+/// and the `CodexError` framework. By implementing `IntoCodex` for standard errors,
+/// you can unify disparate error sources into the `Cirious` diagnostic format,
+/// preserving error messages and contextualizing them with internal system tags.
+///
+/// # Examples
+///
+/// ```
+/// use cirious_codex_result::{CodexError, IntoCodex};
+/// use std::io;
+///
+/// // Converting an IO error into a diagnostic CodexError
+/// let io_err = io::Error::new(io::ErrorKind::NotFound, "File not found");
+/// let codex_err = io_err.into_codex("FILE_SYSTEM_FAILURE");
+///
+/// assert_eq!(codex_err.name(), "FILE_SYSTEM_FAILURE");
+/// assert!(codex_err.cause().contains("File not found"));
+/// ```
+pub trait IntoCodex {
+  /// Consumes the error and transforms it into a `CodexError`.
+  ///
+  /// # Arguments
+  /// * `name` - A unique identifier/code for the error category.
+  fn into_codex(self, name: &str) -> CodexError;
+}
+
+impl<E: std::error::Error> IntoCodex for E {
+  fn into_codex(self, name: &str) -> CodexError {
+    CodexError::builder(name, self.to_string())
+  }
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;

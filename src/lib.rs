@@ -22,7 +22,7 @@ pub mod error;
 pub mod macros;
 pub mod ok;
 
-pub use error::CodexError;
+pub use error::{CodexError, IntoCodex};
 pub use ok::{CodexOk, CodexOkWrap};
 
 /// The core diagnostic result type for the Cirious ecosystem.

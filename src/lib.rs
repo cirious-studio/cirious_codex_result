@@ -23,10 +23,10 @@ pub mod macros;
 pub mod ok;
 
 pub use error::{CodexError, IntoCodex};
-pub use ok::{CodexOk, CodexOkWrap};
+pub use ok::{CodexOk, CodexOkRaw, CodexOkWrap, ExecutionContext};
 
 #[cfg(feature = "serde")]
-pub use ok::log_as_json;
+pub use ok::log_codex_ok;
 
 /// The core diagnostic result type for the Cirious ecosystem.
 ///

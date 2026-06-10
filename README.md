@@ -58,19 +58,28 @@ fn main() {
 
 ### ✅ v0.1.0 — Foundation
 
-- [x] Core diagnostic result types (`CodexOk` and `CodexError`).
+- [x] Core diagnostic result types (`CodexOkRaw` and `CodexError`).
 - [x] Automatic caller location tracking via `#[track_caller]`.
 - [x] Native backtrace capturing for deep diagnostics.
 - [x] Ergonomic Builder pattern for context and suggestion injection.
 - [x] Extension Traits (`.into_codex()`) and ergonomic macros (`codex_ok!`) for frictionless success wrapping.
 
-### 🔭 v0.2.0 — Production Refinement
+### ✅ v0.2.0 — Production Refinement
 
-- [x] **Macros**: `codex_bail!` & `codex_ensure!` for quick propagation.
-- [x] **Conversions**: `From` traits for standard errors (e.g., `std::io::Error`).
-- [x] **Serde**: Optional feature for serialization & deserialization.
-- [x] **Formatting**: Advanced formatters for CLI outputs & structured logs.
-- [ ] **Metadata**: Typed values & generic contexts replacing `HashMap`.
+- [x] Macros `codex_bail!` & `codex_ensure!` for quick propagation.
+- [x] Conversions `From` traits for standard errors (e.g., `std::io::Error`).
+- [x] Serde Optional feature for serialization & deserialization.
+- [x] Formatting Advanced formatters for CLI outputs & structured logs.
+- [x] Metadata Typed values & generic contexts replacing `HashMap`.
+- [x] Core diagnostic result types (CodexOkRaw and CodexError).
+
+### 🔭 v0.3.0 — Advanced Diagnostics
+
+- [ ] Native ? Operator Support: Implement From<E> for CodexError traits to allow seamless error propagation using the standard ? operator.
+- [ ] Zero-Cost Diagnostics: Optimize Backtrace capturing; introduce an #[cfg(feature = "full-debug")] flag to allow users to toggle heavy diagnostic data in production environments.
+- [ ] Unified Result Macro: Introduce codex_result! to handle both success and error paths dynamically, reducing boilerplate in controller/service layers.
+- [ ] Async Readiness: Ensure CodexOk and CodexError are Send + Sync and fully compatible with tokio and other async runtimes.
+- [ ] Type-Safe Diagnostics: Explore const generics or specialized traits to enforce mandatory metadata for specific error types (e.g., forcing a service_id for all Database errors).
 
 ---
 

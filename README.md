@@ -68,8 +68,8 @@ fn main() {
 
 - [x] **Macros**: `codex_bail!` & `codex_ensure!` for quick propagation.
 - [x] **Conversions**: `From` traits for standard errors (e.g., `std::io::Error`).
-- [ ] **Serde**: Optional feature for serialization & deserialization.
-- [ ] **Formatting**: Advanced formatters for CLI outputs & structured logs.
+- [x] **Serde**: Optional feature for serialization & deserialization.
+- [x] **Formatting**: Advanced formatters for CLI outputs & structured logs.
 - [ ] **Metadata**: Typed values & generic contexts replacing `HashMap`.
 
 ---

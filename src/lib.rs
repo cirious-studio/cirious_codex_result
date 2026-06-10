@@ -25,6 +25,9 @@ pub mod ok;
 pub use error::{CodexError, IntoCodex};
 pub use ok::{CodexOk, CodexOkWrap};
 
+#[cfg(feature = "serde")]
+pub use ok::log_as_json;
+
 /// The core diagnostic result type for the Cirious ecosystem.
 ///
 /// This type alias sets `CodexOk<T>` as the default success type and `CodexError`

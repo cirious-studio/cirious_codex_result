@@ -13,6 +13,12 @@ keywords = ["error-handling", "result", "diagnostic", "codex", "cirious"]
 categories = ["rust-patterns", "development-tools::debugging"]
 
 [dependencies]
+serde = { version = "1.0", features = ["derive"], optional = true }
+serde_json = { version = "1.0", optional = true }
+
+[features]
+default = []
+serde = ["dep:serde", "dep:serde_json"]
 
 [lints.rust]
 unsafe_code = "warn"

@@ -6,6 +6,7 @@
 //! observability and tracing.
 
 use std::collections::HashMap;
+use std::fmt;
 use std::panic::Location;
 
 /// Detailed diagnostic information for a successful execution.
@@ -28,13 +29,28 @@ use std::panic::Location;
 /// assert_eq!(result.execution_meta.get("duration_ms").unwrap(), "42");
 /// ```
 #[derive(Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(default))]
 pub struct CodexOk<T> {
   /// The underlying successful value.
   pub value: T,
   /// The precise location in the source code where this success was created.
+  #[cfg_attr(feature = "serde", serde(skip))]
   pub location: &'static Location<'static>,
   /// Arbitrary key-value metadata associated with this successful execution.
   pub execution_meta: HashMap<String, String>,
+}
+
+impl<T: fmt::Display> fmt::Display for CodexOk<T> {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    write!(
+      f,
+      "SUCCESS: {} | Location: {}:{}",
+      self.value,
+      self.location.file(),
+      self.location.line()
+    )
+  }
 }
 
 impl<T> CodexOk<T> {
@@ -69,6 +85,32 @@ impl<T> CodexOk<T> {
   pub fn with_meta<K: Into<String>, V: Into<String>>(mut self, key: K, value: V) -> Self {
     self.execution_meta.insert(key.into(), value.into());
     self
+  }
+}
+
+/// Serializes a value to JSON and prints it to standard output.
+///
+/// This function is intended for structured logging where the provided value
+/// must implement `serde::Serialize`. If serialization fails, the error is
+/// silently ignored.
+///
+/// # Arguments
+///
+/// * `val` - A reference to the value to be serialized.
+///
+/// # Example
+///
+/// ```
+/// # use serde::Serialize;
+/// # #[derive(Serialize)]
+/// # struct User { name: String }
+/// # let user = User { name: "Alice".into() };
+/// cirious_codex_result::log_as_json(&user);
+/// ```
+#[cfg(feature = "serde")]
+pub fn log_as_json<T: serde::Serialize>(val: &T) {
+  if let Ok(json) = serde_json::to_string(val) {
+    println!("{}", json);
   }
 }
 

@@ -9,13 +9,34 @@ use std::collections::HashMap;
 use std::panic::Location;
 
 #[derive(Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(default))]
 struct CodexErrorData {
   pub name: String,
   pub cause: String,
   pub suggestion: Option<String>,
+
+  #[cfg_attr(feature = "serde", serde(skip))]
   pub location: &'static Location<'static>,
+
+  #[cfg_attr(feature = "serde", serde(skip))]
   pub backtrace: Backtrace,
+
   pub metadata: HashMap<String, String>,
+}
+
+#[cfg(feature = "serde")]
+impl Default for CodexErrorData {
+  fn default() -> Self {
+    Self {
+      name: "Unknown Error".to_string(),
+      cause: "No cause provided".to_string(),
+      suggestion: None,
+      location: std::panic::Location::caller(),
+      backtrace: std::backtrace::Backtrace::disabled(),
+      metadata: std::collections::HashMap::new(),
+    }
+  }
 }
 
 /// Detailed diagnostic information for a failed execution.
@@ -38,6 +59,7 @@ struct CodexErrorData {
 /// assert_eq!(error.suggestion().unwrap(), "Check the network connection and database status");
 /// ```
 #[derive(Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CodexError {
   inner: Box<CodexErrorData>,
 }

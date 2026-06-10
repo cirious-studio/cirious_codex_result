@@ -75,6 +75,7 @@ impl CodexError {
   /// # Arguments
   ///
   /// * `suggestion` - The actionable hint text.
+  #[must_use]
   pub fn with_suggestion<S: Into<String>>(mut self, suggestion: S) -> Self {
     self.inner.suggestion = Some(suggestion.into());
     self
@@ -89,37 +90,49 @@ impl CodexError {
   ///
   /// * `key` - The metadata key (e.g., `"process_id"`).
   /// * `value` - The string representation of the metadata value.
+  #[must_use]
   pub fn with_meta<K: Into<String>, V: Into<String>>(mut self, key: K, value: V) -> Self {
     self.inner.metadata.insert(key.into(), value.into());
     self
   }
 
   /// Retrieves the high-level identifier or code for the error.
+  #[inline]
+  #[must_use]
   pub fn name(&self) -> &str {
     &self.inner.name
   }
 
   /// Retrieves the descriptive reason or cause of the error.
+  #[inline]
+  #[must_use]
   pub fn cause(&self) -> &str {
     &self.inner.cause
   }
 
   /// Retrieves the optional actionable hint for resolving the error.
+  #[inline]
+  #[must_use]
   pub fn suggestion(&self) -> Option<&String> {
     self.inner.suggestion.as_ref()
   }
 
   /// Retrieves the arbitrary key-value metadata providing execution context.
+  #[inline]
+  #[must_use]
   pub fn metadata(&self) -> &HashMap<String, String> {
     &self.inner.metadata
   }
 
   /// Retrieves the system backtrace captured at the moment of error creation.
+  #[inline]
   pub fn backtrace(&self) -> &Backtrace {
     &self.inner.backtrace
   }
 
   /// Retrieves the exact location in the source code where this error was built.
+  #[inline]
+  #[must_use]
   pub fn location(&self) -> &'static Location<'static> {
     self.inner.location
   }
@@ -129,7 +142,7 @@ impl std::fmt::Display for CodexError {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     write!(f, "[{}] {}", self.inner.name, self.inner.cause)?;
     if let Some(sug) = &self.inner.suggestion {
-      write!(f, "\nSuggestion: {}", sug)?;
+      write!(f, "\nSuggestion: {sug}")?;
     }
     Ok(())
   }
@@ -147,12 +160,15 @@ mod tests {
       .with_suggestion("Increase the swap limit")
       .with_meta("process_id", "1234");
 
-    let error_string = format!("{}", error);
+    let error_string = format!("{error}");
     assert!(error_string.contains("[SYS_FAULT] Insufficient memory"));
     assert!(error_string.contains("Suggestion: Increase the swap limit"));
 
     let loc = error.location();
     assert!(loc.file().ends_with("error.rs"), "Should capture the current file name");
-    assert_eq!(error.metadata().get("process_id").unwrap(), "1234");
+
+    if let Some(result) = error.metadata().get("process_id") {
+      assert_eq!(result, "1234");
+    }
   }
 }

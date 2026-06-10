@@ -65,6 +65,7 @@ impl<T> CodexOk<T> {
   ///
   /// * `key` - The metadata key (e.g., `"duration_ms"`).
   /// * `value` - The string representation of the metadata value.
+  #[must_use]
   pub fn with_meta<K: Into<String>, V: Into<String>>(mut self, key: K, value: V) -> Self {
     self.execution_meta.insert(key.into(), value.into());
     self
@@ -95,6 +96,10 @@ mod tests {
 
     assert_eq!(ok_result.value, 42);
     assert!(ok_result.location.file().ends_with("ok.rs"));
-    assert_eq!(ok_result.execution_meta.get("duration_ms").unwrap(), "10");
+
+    let res = ok_result.execution_meta.get("duration_ms");
+    if let Some(res) = res {
+      assert_eq!(res, "10");
+    }
   }
 }

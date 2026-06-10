@@ -11,7 +11,15 @@
 //! - [`CodexOk`]: Wraps successful executions, allowing the injection of metrics or metadata.
 //! - [`Result`]: The central alias uniting `CodexOk` and `CodexError`.
 
+// Enables docs.rs features to show tags like "Only on Windows"
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+// Ensures all public items are documented (Essential for crates.io)
+#![warn(missing_docs)]
+// Prevents accidental unsafe code in the entire crate
+#![deny(unsafe_code)]
+
 pub mod error;
+pub mod macros;
 pub mod ok;
 
 pub use error::CodexError;
@@ -41,58 +49,65 @@ pub use ok::{CodexOk, CodexOkWrap};
 /// ```
 pub type Result<T, E = CodexError> = std::result::Result<CodexOk<T>, E>;
 
-/// Macro for quickly wrapping a value and optional metadata into an `Ok(CodexOk)`.
-///
-/// # Examples
-///
-/// ```
-/// use cirious_codex_result::{codex_ok, Result};
-///
-/// fn process() -> Result<&'static str> {
-///     // Returns immediately with metadata
-///     codex_ok!("Done", "time_ms" => "12", "id" => "99")
-/// }
-/// ```
-#[macro_export]
-macro_rules! codex_ok {
-  // Chamada simples sem metadados
-  ($val:expr) => {
-    Ok($crate::CodexOk::new($val))
-  };
-  // Chamada com injeção de N metadados separados por vírgula
-  ($val:expr, $($key:expr => $meta:expr),+ $(,)?) => {
-    Ok($crate::CodexOk::new($val)
-      $(.with_meta($key, $meta))+)
-  };
-}
-
 #[cfg(test)]
 mod tests {
-  use super::*;
+  use crate::codex_ok;
+
+  use super::{codex_bail, codex_ensure, Result};
+
+  fn test_bail_function(val: i32) -> Result<i32> {
+    if val < 0 {
+      codex_bail!("VAL_ERROR", "Value is negative", "val" => val.to_string());
+    }
+    codex_ok!(val)
+  }
+
+  fn test_ensure_function(val: i32) -> Result<i32> {
+    codex_ensure!(val >= 0, "VAL_ERROR", "Value must be non-negative", "val" => val.to_string());
+    codex_ok!(val)
+  }
 
   #[test]
-  fn test_codex_result_alias() {
-    // Test function that returns our global Result
-    fn simulate_operation(success: bool) -> Result<i32> {
-      if success {
-        Ok(CodexOk::new(100).with_meta("duration_ms", "15"))
-      } else {
-        Err(
-          CodexError::builder("OP_ERROR", "Simulation failed")
-            .with_suggestion("Check the success boolean parameter")
-            .with_meta("retry_count", "3"),
-        )
+  fn test_codex_bail() {
+    let result = test_bail_function(-1);
+    assert!(result.is_err());
+
+    match result {
+      Err(err) => {
+        assert_eq!(err.name(), "VAL_ERROR");
+        assert_eq!(err.cause(), "Value is negative");
+        if let Some(meta) = err.metadata().get("val") {
+          assert_eq!(meta, "-1");
+        }
       }
+      Ok(_) => panic!("Expected an error"),
     }
+  }
 
-    // Validating success scenario
-    let success_res = simulate_operation(true);
-    assert!(success_res.is_ok());
-    assert_eq!(success_res.unwrap().value, 100);
+  #[test]
+  fn test_codex_ensure_success() {
+    let result = test_ensure_function(10);
+    assert!(result.is_ok());
+    match result {
+      Ok(val) => assert_eq!(val.value, 10),
+      Err(err) => panic!("Unexpected error: {err}"),
+    }
+  }
 
-    // Validating failure scenario
-    let error_res = simulate_operation(false);
-    assert!(error_res.is_err());
-    assert_eq!(error_res.unwrap_err().name(), "OP_ERROR");
+  #[test]
+  fn test_codex_ensure_failure() {
+    let result = test_ensure_function(-5);
+    assert!(result.is_err());
+
+    match result {
+      Err(err) => {
+        assert_eq!(err.name(), "VAL_ERROR");
+        assert_eq!(err.cause(), "Value must be non-negative");
+        if let Some(meta) = err.metadata().get("val") {
+          assert_eq!(meta, "-5");
+        }
+      }
+      Ok(_) => panic!("Expected an error"),
+    }
   }
 }

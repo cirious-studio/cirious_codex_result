@@ -18,69 +18,55 @@ It provides a rich, generic envelope around operations, guaranteeing that every 
 
 Designed to be the immutable bedrock for execution tracking within the Cirious ecosystem, prioritizing maximum observability and flawless developer experience.
 
----
-
-## ✨ Features
-
-- Core diagnostic result types (`CodexOk` and `CodexError`).
-- Automatic caller location tracking via `#[track_caller]`.
-- Native backtrace capturing for deep diagnostics.
-- Ergonomic Builder pattern for context and suggestion injection.
-- Extension Traits (`.into_codex()`) and ergonomic macros (`codex_ok!`) for frictionless success wrapping.
-
-
----
-
 ## 🚀 Quick Start
  
 Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-cirious_codex_result = "0.1.0"
+cirious_codex_result = "0.2.0"
 ```
 
 And then in your code:
 
 ```rust
-use cirious_codex_result::{codex_ok, CodexError, Result};
- 
-fn connect_to_database(url: &str) -> Result<String> {
-    if url.is_empty() {
-        return Err(
-            CodexError::builder("DB_ERROR", "URL cannot be empty")
-                .with_suggestion("Provide a valid connection string like postgres://...")
-                .with_meta("attempted_url", url),
-        );
-    }
+use cirious_codex_result::{codex_bail, codex_ensure, codex_ok, Result};
 
-    // Wrap the successful value with contextual metadata
-    codex_ok!("Connected".to_string(), "latency_ms" => "25")
+fn connect_to_database(url: &str) -> Result<String> {
+  // Using codex_ensure! to validate inputs with high-context diagnostics
+  codex_ensure!(!url.is_empty(), "DB_ERROR", "URL cannot be empty", "attempted_url" => url);
+
+  if url == "fail" {
+    // Using codex_bail! to propagate errors with custom metadata
+    codex_bail!("CONNECTION_FAILED", "Database unreachable", "system" => "postgres");
+  }
+
+  // Wrapping success with contextual metadata
+  codex_ok!("Connected".to_string(), "latency_ms" => "25")
 }
 
 fn main() {
-    match connect_to_database("postgres://localhost") {
-        Ok(ok) => {
-            println!("✅ Success: {}", ok.value);
-            println!("⏱️ Latency: {}ms", ok.execution_meta.get("latency_ms").unwrap());
-        }
-        Err(err) => {
-            println!("❌ Error [{}]: {}", err.name, err.cause);
-            if let Some(sug) = err.suggestion {
-                println!("💡 Suggestion: {}", sug);
-            }
-            // You can also access err.backtrace and err.metadata!
-        }
-    }
+  match connect_to_database("postgres://localhost") {
+    Ok(ok) => println!("✅ Success: {}", ok.value),
+    Err(err) => println!("❌ Error [{}]: {}", err.name(), err.cause()),
+  }
 }
 ```
 ---
 
 ## 🚧 Current Status & Roadmap
 
-The architecture is currently being mapped out for the initial `v0.2` release. Planned features include:
+### ✅ v0.1.0 — Foundation
 
-- [ ] **Macros**: `codex_bail!` & `codex_ensure!` for quick propagation.
+- [x] Core diagnostic result types (`CodexOk` and `CodexError`).
+- [x] Automatic caller location tracking via `#[track_caller]`.
+- [x] Native backtrace capturing for deep diagnostics.
+- [x] Ergonomic Builder pattern for context and suggestion injection.
+- [x] Extension Traits (`.into_codex()`) and ergonomic macros (`codex_ok!`) for frictionless success wrapping.
+
+### 🔭 v0.2.0 — Production Refinement
+
+- [x] **Macros**: `codex_bail!` & `codex_ensure!` for quick propagation.
 - [ ] **Conversions**: `From` traits for standard errors (e.g., `std::io::Error`).
 - [ ] **Serde**: Optional feature for serialization & deserialization.
 - [ ] **Formatting**: Advanced formatters for CLI outputs & structured logs.

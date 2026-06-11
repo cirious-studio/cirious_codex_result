@@ -1,6 +1,6 @@
 [package]
 name = "cirious_codex_result"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 authors = ["Cirious Studio <cirious.studio@proton.me>"]
 description = "Robust result and error handling framework for the Cirious Codex ecosystem."
